@@ -1,101 +1,250 @@
-# SecureCloud Terraform Infrastructure
+# Secure Web Application Infrastructure
 
-This folder is prepared for repeatable lifecycle operations:
+Terraform infrastructure for deploying a secure, segmented web application environment on Microsoft Azure. The project combines network isolation, managed security services, protected application delivery, and GitHub Actions automation into a repeatable infrastructure-as-code workflow.
 
-- deploy the full stack
-- inspect outputs
-- destroy all managed resources
+## Project Overview
+
+The platform is designed to host a web application behind layered network and application security controls:
+
+- A dedicated Azure virtual network with separate subnets for the application, runner, Application Gateway, firewall, database, and VPN gateway.
+- An Ubuntu application VM running the web workload.
+- Azure Application Gateway with TLS termination and Web Application Firewall capabilities.
+- Azure Firewall for controlled network traffic and protected subnet routing.
+- Azure SQL configured with restricted network access.
+- A point-to-site VPN gateway for administrative access.
+- A dedicated GitHub Actions self-hosted runner VM for deployment automation.
+- Optional trusted TLS certificate integration through Azure Key Vault.
+
+The infrastructure is modular, parameterized, and intended to be deployed and destroyed consistently across development environments.
+
+## Architecture
+
+```text
+Internet
+   |
+   v
+Application Gateway (TLS termination + WAF)
+   |
+   v
+Application subnet
+   |
+   v
+Ubuntu application VM
+   |
+   +--> Azure SQL (restricted subnet access)
+   |
+   +--> Azure Key Vault (optional trusted certificate integration)
+
+Administrator
+   |
+   v
+Point-to-site VPN gateway
+   |
+   v
+Private Azure resources
+
+GitHub Actions
+   |
+   v
+Self-hosted runner VM
+```
+
+Azure Firewall can be enabled to route protected subnets through a central inspection point. Application Gateway routing through the firewall is configurable with `include_app_gateway_in_firewall_routing`.
+
+## Technology Stack
+
+- **Cloud:** Microsoft Azure
+- **Infrastructure as Code:** Terraform
+- **Terraform provider:** `azurerm`
+- **Application host:** Ubuntu Linux VM
+- **Web entry point:** Azure Application Gateway
+- **Application security:** Web Application Firewall
+- **Network security:** Azure Firewall, NSGs, subnet segmentation, and VPN access
+- **Database:** Azure SQL
+- **CI/CD:** GitHub Actions with a self-hosted runner
+- **TLS:** Optional trusted PFX certificate with Azure Key Vault integration
+
+## Repository Structure
+
+```text
+.
+├── .github/
+│   └── workflows/
+│       └── deploy-vm-juice-shop.yml
+├── docs/
+│   └── Rapport_PFA.pdf
+├── keys/                         # Local certificate and SSH artifacts
+├── modules/
+│   ├── app_service/
+│   ├── application_gateway/
+│   ├── firewall/
+│   ├── github_runner/
+│   ├── networking/
+│   ├── nsg/
+│   ├── resource_group/
+│   ├── sql/
+│   └── vpn_gateway/
+├── scripts/
+│   ├── prepare-namecheap-pfx.ps1
+│   ├── set-github-vm-secrets.ps1
+│   ├── terraform-lifecycle.ps1
+│   └── terraform-lifecycle.sh
+├── main.tf
+├── variables.tf
+├── outputs.tf
+├── provider.tf
+└── terraform.tfvars
+```
 
 ## Prerequisites
 
-- Terraform CLI >= 1.5
+- Terraform CLI 1.5 or later
 - Azure CLI
-- Authenticated Azure session: `az login`
-- Valid values in `terraform.tfvars`
+- An Azure subscription with permission to create the required resources
+- A logged-in Azure CLI session
+- An OpenSSH public key for the application and runner VMs
+- GitHub repository access if the self-hosted runner is enabled
 
-## First-Time Setup
+Authenticate before deploying:
 
-1. Authenticate:
-   - `az login`
-2. Optional: confirm the active subscription:
-   - `az account show --output table`
-3. Run validation:
-   - PowerShell: `./scripts/terraform-lifecycle.ps1 -Action validate`
-   - Bash: `./scripts/terraform-lifecycle.sh validate`
+```powershell
+az login
+az account show --output table
+```
 
-## Deploy Anytime
+## Configuration
 
-PowerShell:
+Set environment-specific values in `terraform.tfvars` or provide a separate variables file. At minimum, configure the required VM SSH public key:
 
-- Plan: `./scripts/terraform-lifecycle.ps1 -Action plan`
-- Apply: `./scripts/terraform-lifecycle.ps1 -Action apply`
-- Apply non-interactive: `./scripts/terraform-lifecycle.ps1 -Action apply -AutoApprove`
+```hcl
+project_name          = "pfa_infra"
+location              = "francecentral"
+vm_admin_ssh_public_key = "ssh-rsa AAAA..."
+github_repo_url       = "https://github.com/seifelabed21/Secure_Web_App_Infrastructure"
 
-Bash:
+tags = {
+  environment = "dev"
+  owner       = "student"
+  project     = "pfa-network"
+}
+```
 
-- Plan: `./scripts/terraform-lifecycle.sh plan`
-- Apply: `./scripts/terraform-lifecycle.sh apply`
-- Apply non-interactive: `AUTO_APPROVE=true ./scripts/terraform-lifecycle.sh apply`
+Important variables include:
 
-## Destroy Everything
+- `project_name`, `location`, and `address_space` for the deployment identity and network.
+- `vm_admin_ssh_public_key` for secure VM administration.
+- `github_repo_url` and `runner_registration_token` for self-hosted runner registration.
+- `enable_network_firewall` to enable or disable Azure Firewall.
+- `include_app_gateway_in_firewall_routing` to control Application Gateway routing.
+- `app_public_domain`, `ssl_certificate_pfx_path`, and `ssl_certificate_pfx_password` for trusted HTTPS.
 
-PowerShell:
+Do not commit passwords, tokens, private keys, PFX files, or state files. The repository ignores local Terraform state, `.terraform`, and key material.
 
-- Interactive safe destroy: `./scripts/terraform-lifecycle.ps1 -Action destroy`
-- Non-interactive destroy: `./scripts/terraform-lifecycle.ps1 -Action destroy -AutoApprove`
+## Terraform Workflow
 
-Bash:
+The lifecycle scripts initialize Terraform and provide consistent commands for validation, planning, deployment, output inspection, and destruction.
 
-- Interactive safe destroy: `./scripts/terraform-lifecycle.sh destroy`
-- Non-interactive destroy: `AUTO_APPROVE=true ./scripts/terraform-lifecycle.sh destroy`
+### Validate
 
-## Useful Operations
+```powershell
+.\scripts\terraform-lifecycle.ps1 -Action validate
+```
 
-- Show outputs:
-  - PowerShell: `./scripts/terraform-lifecycle.ps1 -Action output`
-  - Bash: `./scripts/terraform-lifecycle.sh output`
-- Use a different tfvars file:
-  - PowerShell: `./scripts/terraform-lifecycle.ps1 -Action apply -TfVarsFile custom.tfvars`
-  - Bash: `TFVARS_FILE=custom.tfvars ./scripts/terraform-lifecycle.sh apply`
+```bash
+./scripts/terraform-lifecycle.sh validate
+```
 
-## Trusted TLS (Namecheap) Auto-Bind
+### Plan and Apply
 
-If you have an issued certificate from Namecheap, you can make App Gateway bind it automatically during `terraform apply`.
+```powershell
+.\scripts\terraform-lifecycle.ps1 -Action plan
+.\scripts\terraform-lifecycle.ps1 -Action apply
+.\scripts\terraform-lifecycle.ps1 -Action apply -AutoApprove
+```
 
-1. Generate PFX from your issued cert on the same Windows user/machine that created the CSR:
-   - `./scripts/prepare-namecheap-pfx.ps1 -DomainName pfaseifaymen.me -IssuedCertificatePath C:\path\pfaseifaymen.me.crt -PfxPassword "YourStrongPfxPassword" -OutputPfxPath "keys/pfaseifaymen.me.pfx"`
-2. Set these values in `terraform.tfvars`:
-   - `app_public_domain = "pfaseifaymen.me"`
-   - `ssl_certificate_pfx_path = "keys/pfaseifaymen.me.pfx"`
-   - `ssl_certificate_pfx_password = "YourStrongPfxPassword"`
-3. Deploy:
-   - PowerShell: `./scripts/terraform-lifecycle.ps1 -Action apply`
-   - Bash: `./scripts/terraform-lifecycle.sh apply`
+```bash
+./scripts/terraform-lifecycle.sh plan
+./scripts/terraform-lifecycle.sh apply
+AUTO_APPROVE=true ./scripts/terraform-lifecycle.sh apply
+```
 
-Behavior:
+### Inspect Outputs
 
-- If `ssl_certificate_pfx_path` is set, Terraform imports that trusted PFX into Key Vault and App Gateway uses it.
-- If `ssl_certificate_pfx_path` is empty, Terraform falls back to a generated self-signed certificate.
+```powershell
+.\scripts\terraform-lifecycle.ps1 -Action output
+```
 
-DNS reminder:
+```bash
+./scripts/terraform-lifecycle.sh output
+```
 
-- Point your domain A record to the Application Gateway public IP, not the backend VM.
+### Destroy the Environment
 
-### DNS Checklist (after deploy)
+```powershell
+.\scripts\terraform-lifecycle.ps1 -Action destroy
+.\scripts\terraform-lifecycle.ps1 -Action destroy -AutoApprove
+```
 
-1. Get App Gateway public IP:
-   - `terraform output application_gateway_public_ip`
-2. At your DNS provider (Namecheap), create records:
-   - `A` record: `@` -> `<application_gateway_public_ip>`
-   - Optional `CNAME`: `www` -> `pfaseifaymen.me`
-3. Wait for propagation, then verify:
-   - `nslookup pfaseifaymen.me`
-4. Browse only using the domain:
-   - `https://pfaseifaymen.me`
+```bash
+./scripts/terraform-lifecycle.sh destroy
+AUTO_APPROVE=true ./scripts/terraform-lifecycle.sh destroy
+```
 
-## Notes
+Destroy unused environments promptly to avoid unnecessary Azure charges.
 
-- `keys/`, `.terraform/`, and `*.tfstate*` are ignored in Git to avoid leaking sensitive local artifacts.
-- The scripts always run `terraform init -upgrade -reconfigure` unless explicitly skipped:
-  - PowerShell: `-SkipInit`
-  - Bash: `SKIP_INIT=true`
+## Trusted TLS and DNS
+
+The Application Gateway can use a trusted certificate issued for the public application domain.
+
+1. Generate a PFX from the issued certificate:
+
+   ```powershell
+   .\scripts\prepare-namecheap-pfx.ps1 `
+     -DomainName pfaseifaymen.me `
+     -IssuedCertificatePath C:\path\pfaseifaymen.me.crt `
+     -PfxPassword "YourStrongPfxPassword" `
+     -OutputPfxPath "keys\pfaseifaymen.me.pfx"
+   ```
+
+2. Set `app_public_domain`, `ssl_certificate_pfx_path`, and `ssl_certificate_pfx_password` in `terraform.tfvars`.
+3. Apply the Terraform configuration.
+4. Point the domain A record to the Application Gateway public IP, never directly to the backend VM.
+
+The public IP can be retrieved with:
+
+```powershell
+terraform output application_gateway_public_ip
+```
+
+## GitHub Actions Deployment
+
+The workflow in `.github/workflows/deploy-vm-juice-shop.yml` deploys the application to the VM through the self-hosted runner. After a destroy/redeploy cycle, the lifecycle scripts can refresh repository variables from Terraform outputs:
+
+```powershell
+.\scripts\terraform-lifecycle.ps1 `
+  -Action apply `
+  -AutoApprove `
+  -SyncGithubVars
+```
+
+The repository can be overridden with `-GitHubRepo`. The Bash equivalent uses `SYNC_GITHUB_VARS=true` and `GITHUB_REPO`.
+
+## Security Controls
+
+- Segmented virtual network with dedicated subnets.
+- Network Security Groups attached to protected subnets.
+- Private administration through point-to-site VPN.
+- Application Gateway as the controlled public entry point.
+- WAF protection for inbound web traffic.
+- Azure Firewall for optional centralized network inspection.
+- Restricted database network access.
+- Managed TLS certificate integration through Azure Key Vault.
+- Secrets and private artifacts excluded from version control.
+
+## Documentation
+
+The project report is available in [`docs/Rapport_PFA.pdf`](docs/Rapport_PFA.pdf).
+
+## Repository
+
+[Secure_Web_App_Infrastructure](https://github.com/seifelabed21/Secure_Web_App_Infrastructure)
