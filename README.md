@@ -19,35 +19,8 @@ The infrastructure is modular, parameterized, and intended to be deployed and de
 
 ## Architecture
 
-```text
-Internet
-   |
-   v
-Application Gateway (TLS termination + WAF)
-   |
-   v
-Application subnet
-   |
-   v
-Ubuntu application VM
-   |
-   +--> Azure SQL (restricted subnet access)
-   |
-   +--> Azure Key Vault (optional trusted certificate integration)
 
-Administrator
-   |
-   v
-Point-to-site VPN gateway
-   |
-   v
-Private Azure resources
-
-GitHub Actions
-   |
-   v
-Self-hosted runner VM
-```
+<img width="1376" height="768" alt="image" src="https://github.com/user-attachments/assets/e76e0cda-7d41-4c8f-8fbe-81bad114a78e" />
 
 Azure Firewall can be enabled to route protected subnets through a central inspection point. Application Gateway routing through the firewall is configurable with `include_app_gateway_in_firewall_routing`.
 
