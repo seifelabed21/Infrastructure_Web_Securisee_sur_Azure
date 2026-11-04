@@ -247,41 +247,52 @@ Le rapport du projet est disponible dans [`docs/Rapport_PFA.pdf`](docs/Rapport_P
 
 ## 14. Correspondance entre le rapport et l'implémentation
 
-Cette section facilite la lecture du rapport en parallèle du code source. Elle associe les principaux chapitres du rapport aux fichiers et modules Terraform correspondants.
+Cette section permet de consulter le rapport et le code source en parallèle. Le rapport comporte deux chapitres principaux ; les éléments d'implémentation sont principalement détaillés dans le chapitre II.
 
-### Chapitre 2 — Architecture et structure Terraform
+### Chapitre I — État de l'Art
 
-- [`main.tf`](main.tf) : orchestration des modules et définition de l'architecture globale ;
-- [`modules/networking/`](modules/networking/) : réseau virtuel, sous-réseaux et routage de base ;
-- [`modules/firewall/`](modules/firewall/) : Azure Firewall et tables de routage ;
-- [`modules/application_gateway/`](modules/application_gateway/) : Application Gateway, terminaison TLS et WAF ;
-- [`modules/vpn_gateway/`](modules/vpn_gateway/) : passerelle VPN point-to-site ;
-- [`modules/app_service/`](modules/app_service/) : machine virtuelle Ubuntu hébergeant l'application ;
-- [`modules/sql/`](modules/sql/) : serveur et base Azure SQL ;
+Ce chapitre présente les fondements théoriques, le modèle Zero Trust, les technologies de défense cloud et la justification des choix technologiques. Il constitue le cadre conceptuel de l'architecture implémentée, notamment pour :
+
+- la segmentation réseau et les Network Security Groups ;
+- le pare-feu Azure et le filtrage des flux ;
+- le Web Application Firewall ;
+- l'accès distant par VPN point-to-site ;
+- l'utilisation de Terraform comme approche Infrastructure as Code.
+
+### Chapitre II — Mise en place d'une solution de sécurisation
+
+#### II.2 — Conception et architecture
+
+- [`main.tf`](main.tf) : orchestration de l'architecture Terraform ;
+- [`modules/networking/`](modules/networking/) : réseau virtuel et sous-réseaux ;
+- [`modules/resource_group/`](modules/resource_group/) : groupe de ressources et tags ;
+- [`modules/app_service/`](modules/app_service/) : machine virtuelle Ubuntu de l'application ;
+- [`modules/application_gateway/`](modules/application_gateway/) : Application Gateway, TLS et WAF ;
+- [`modules/firewall/`](modules/firewall/) : Azure Firewall et routage ;
 - [`modules/nsg/`](modules/nsg/) : règles de sécurité réseau ;
-- [`modules/resource_group/`](modules/resource_group/) : groupe de ressources Azure et tags communs.
+- [`modules/sql/`](modules/sql/) : serveur et base Azure SQL ;
+- [`modules/vpn_gateway/`](modules/vpn_gateway/) : passerelle VPN point-to-site ;
+- [`modules/github_runner/`](modules/github_runner/) : machine virtuelle du runner GitHub Actions.
 
-### Chapitre 3 — Déploiement, CI/CD et TLS
+#### II.3 — Installation et configuration
 
-- [`deploy-vm-juice-shop.yml`](.github/workflows/deploy-vm-juice-shop.yml) : workflow GitHub Actions exécuté par le runner auto-hébergé ;
-- [`scripts/terraform-lifecycle.ps1`](scripts/terraform-lifecycle.ps1) et [`scripts/terraform-lifecycle.sh`](scripts/terraform-lifecycle.sh) : validation, planification, déploiement, destruction et synchronisation des variables GitHub ;
-- [`scripts/prepare-namecheap-pfx.ps1`](scripts/prepare-namecheap-pfx.ps1) : préparation d'un certificat PFX de confiance pour l'Application Gateway ;
-- [`variables.tf`](variables.tf) : paramètres du domaine public, du certificat PFX et de l'enregistrement du runner ;
-- [`modules/github_runner/`](modules/github_runner/) : création et configuration de la machine virtuelle self-hosted runner.
+- [`scripts/terraform-lifecycle.ps1`](scripts/terraform-lifecycle.ps1) et [`scripts/terraform-lifecycle.sh`](scripts/terraform-lifecycle.sh) : validation, planification, déploiement et destruction ;
+- [`deploy-vm-juice-shop.yml`](.github/workflows/deploy-vm-juice-shop.yml) : pipeline GitHub Actions exécuté par le runner auto-hébergé ;
+- [`scripts/prepare-namecheap-pfx.ps1`](scripts/prepare-namecheap-pfx.ps1) : préparation du certificat PFX pour HTTPS ;
+- [`variables.tf`](variables.tf) et [`terraform.tfvars`](terraform.tfvars) : paramètres du domaine, du certificat, du réseau et du runner.
 
-### Chapitre 4 — Sécurité opérationnelle et contrôle des flux
+#### II.4 — Résultats
 
-- [`modules/firewall/main.tf`](modules/firewall/main.tf) : règles et routage Azure Firewall ;
-- [`modules/nsg/main.tf`](modules/nsg/main.tf) : règles Network Security Group ;
-- [`modules/networking/main.tf`](modules/networking/main.tf) : sous-réseaux, associations réseau et routage ;
-- [`modules/application_gateway/main.tf`](modules/application_gateway/main.tf) : point d'entrée web et configuration WAF ;
-- [`modules/vpn_gateway/main.tf`](modules/vpn_gateway/main.tf) : accès d'administration via VPN.
+Les sorties Terraform décrites dans le rapport sont déclarées dans [`outputs.tf`](outputs.tf), notamment les adresses IP, l'URL HTTPS, le FQDN Azure SQL et les informations des composants réseau.
 
-### Chapitre 5 — Tests et preuves
+#### II.5 — Tests avec les attaques et II.6 — Problèmes résolus
 
-- [`docs/Rapport_PFA.pdf`](docs/Rapport_PFA.pdf) : rapport complet, résultats des tests et preuves de validation ;
-- les fichiers de configuration Terraform et les sorties de déploiement permettent de reproduire les scénarios décrits dans le rapport.
+Les résultats, captures et preuves des tests de sécurité sont présentés dans [`docs/Rapport_PFA.pdf`](docs/Rapport_PFA.pdf). Les configurations correspondantes se trouvent principalement dans les modules [`firewall`](modules/firewall/), [`nsg`](modules/nsg/) et [`application_gateway`](modules/application_gateway/).
 
 ## 15. Dépôt
 
-[Infrastructure_Web_Securisee_sur_Azure](https://github.com/seifelab21/Infrastructure_Web_Securisee_sur_Azure)
+[Infrastructure_Web_Securisee_sur_Azure](https://github.com/seifelabed21/Infrastructure_Web_Securisee_sur_Azure)
+
+## 15. Dépôt
+
+[Infrastructure_Web_Securisee_sur_Azure](https://github.com/seifelabed21/Infrastructure_Web_Securisee_sur_Azure)
