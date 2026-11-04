@@ -248,3 +248,40 @@ Le rapport du projet est disponible dans [`docs/Rapport_PFA.pdf`](docs/Rapport_P
 ## 14. Dépôt
 
 [Secure_Web_App_Infrastructure](https://github.com/seifelabed21/Secure_Web_App_Infrastructure)
+
+## 18. Correspondance entre le rapport et l'implémentation
+
+Cette section facilite la lecture du rapport en parallèle du code source. Elle associe les principaux chapitres du rapport aux fichiers et modules Terraform correspondants.
+
+### Chapitre 2 — Architecture et structure Terraform
+
+- [`main.tf`](main.tf) : orchestration des modules et définition de l'architecture globale ;
+- [`modules/networking/`](modules/networking/) : réseau virtuel, sous-réseaux et routage de base ;
+- [`modules/firewall/`](modules/firewall/) : Azure Firewall et tables de routage ;
+- [`modules/application_gateway/`](modules/application_gateway/) : Application Gateway, terminaison TLS et WAF ;
+- [`modules/vpn_gateway/`](modules/vpn_gateway/) : passerelle VPN point-to-site ;
+- [`modules/app_service/`](modules/app_service/) : machine virtuelle Ubuntu hébergeant l'application ;
+- [`modules/sql/`](modules/sql/) : serveur et base Azure SQL ;
+- [`modules/nsg/`](modules/nsg/) : règles de sécurité réseau ;
+- [`modules/resource_group/`](modules/resource_group/) : groupe de ressources Azure et tags communs.
+
+### Chapitre 3 — Déploiement, CI/CD et TLS
+
+- [`deploy-vm-juice-shop.yml`](.github/workflows/deploy-vm-juice-shop.yml) : workflow GitHub Actions exécuté par le runner auto-hébergé ;
+- [`scripts/terraform-lifecycle.ps1`](scripts/terraform-lifecycle.ps1) et [`scripts/terraform-lifecycle.sh`](scripts/terraform-lifecycle.sh) : validation, planification, déploiement, destruction et synchronisation des variables GitHub ;
+- [`scripts/prepare-namecheap-pfx.ps1`](scripts/prepare-namecheap-pfx.ps1) : préparation d'un certificat PFX de confiance pour l'Application Gateway ;
+- [`variables.tf`](variables.tf) : paramètres du domaine public, du certificat PFX et de l'enregistrement du runner ;
+- [`modules/github_runner/`](modules/github_runner/) : création et configuration de la machine virtuelle self-hosted runner.
+
+### Chapitre 4 — Sécurité opérationnelle et contrôle des flux
+
+- [`modules/firewall/main.tf`](modules/firewall/main.tf) : règles et routage Azure Firewall ;
+- [`modules/nsg/main.tf`](modules/nsg/main.tf) : règles Network Security Group ;
+- [`modules/networking/main.tf`](modules/networking/main.tf) : sous-réseaux, associations réseau et routage ;
+- [`modules/application_gateway/main.tf`](modules/application_gateway/main.tf) : point d'entrée web et configuration WAF ;
+- [`modules/vpn_gateway/main.tf`](modules/vpn_gateway/main.tf) : accès d'administration via VPN.
+
+### Chapitre 5 — Tests et preuves
+
+- [`docs/Rapport_PFA.pdf`](docs/Rapport_PFA.pdf) : rapport complet, résultats des tests et preuves de validation ;
+- les fichiers de configuration Terraform et les sorties de déploiement permettent de reproduire les scénarios décrits dans le rapport.
