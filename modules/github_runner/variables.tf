@@ -38,7 +38,7 @@ variable "runner_vm_size" {
 variable "github_repo_url" {
   type        = string
   description = "Repository URL for runner registration, e.g. https://github.com/owner/repo"
-  default     = "https://github.com/seifelabed21/Secure_Web_App_Infrastructure"
+  default     = "https://github.com/seifelabed21/Infrastructure_Web_Securisee_sur_Azure"
 }
 
 variable "runner_registration_token" {

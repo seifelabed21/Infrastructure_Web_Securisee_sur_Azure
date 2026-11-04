@@ -111,7 +111,7 @@ project_name           = "pfa_infra"
 location               = "francecentral"
 vm_admin_ssh_public_key = "ssh-rsa AAAA..."
 
-github_repo_url = "https://github.com/seifelabed21/Secure_Web_App_Infrastructure"
+github_repo_url = "https://github.com/seifelabed21/Infrastructure_Web_Securisee_sur_Azure"
 
 tags = {
   environment = "dev"
@@ -284,4 +284,4 @@ Cette section facilite la lecture du rapport en parallèle du code source. Elle 
 
 ## 15. Dépôt
 
-[Secure_Web_App_Infrastructure](https://github.com/seifelabed21/Secure_Web_App_Infrastructure)
+[Infrastructure_Web_Securisee_sur_Azure](https://github.com/seifelab21/Infrastructure_Web_Securisee_sur_Azure)

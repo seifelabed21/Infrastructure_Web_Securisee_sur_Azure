@@ -70,7 +70,7 @@ variable "runner_vm_size" {
 variable "github_repo_url" {
   description = "GitHub repository URL used to register the self-hosted runner"
   type        = string
-  default     = "https://github.com/seifelabed21/Secure_Web_App_Infrastructure"
+  default     = "https://github.com/seifelabed21/Infrastructure_Web_Securisee_sur_Azure"
 }
 
 variable "runner_registration_token" {
@@ -90,6 +90,24 @@ variable "app_public_domain" {
   description = "Public domain served by Application Gateway and used for backend host/probe header"
   type        = string
   default     = ""
+}
+
+variable "enable_network_firewall" {
+  description = "Deploy Azure Firewall and route protected subnets through it"
+  type        = bool
+  default     = true
+}
+
+variable "include_app_gateway_in_firewall_routing" {
+  description = "Whether Application Gateway subnet default route should go through Azure Firewall"
+  type        = bool
+  default     = false
+}
+
+variable "firewall_subnet_cidr" {
+  description = "CIDR for AzureFirewallSubnet"
+  type        = string
+  default     = "10.0.2.0/26"
 }
 
 variable "ssl_certificate_pfx_password" {
