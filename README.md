@@ -245,11 +245,7 @@ Les sorties suivantes sont disponibles après le déploiement :
 
 Le rapport du projet est disponible dans [`docs/Rapport_PFA.pdf`](docs/Rapport_PFA.pdf).
 
-## 14. Dépôt
-
-[Secure_Web_App_Infrastructure](https://github.com/seifelabed21/Secure_Web_App_Infrastructure)
-
-## 18. Correspondance entre le rapport et l'implémentation
+## 14. Correspondance entre le rapport et l'implémentation
 
 Cette section facilite la lecture du rapport en parallèle du code source. Elle associe les principaux chapitres du rapport aux fichiers et modules Terraform correspondants.
 
@@ -285,3 +281,7 @@ Cette section facilite la lecture du rapport en parallèle du code source. Elle 
 
 - [`docs/Rapport_PFA.pdf`](docs/Rapport_PFA.pdf) : rapport complet, résultats des tests et preuves de validation ;
 - les fichiers de configuration Terraform et les sorties de déploiement permettent de reproduire les scénarios décrits dans le rapport.
+
+## 15. Dépôt
+
+[Secure_Web_App_Infrastructure](https://github.com/seifelabed21/Secure_Web_App_Infrastructure)
